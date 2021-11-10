@@ -1,0 +1,10 @@
+{
+  "$schema": "https://aka.ms/azure-quickstart-templates-metadata-schema#",
+  "type": "QuickStart",
+  "itemDisplayName": "Create Network Manager Hub-and-Spoke configuration",
+  "description": "This template allows you to create a Virtual Network Manager Hub-and-Spoke connectivity configuration with one HUB virtual network and two SPOKE virtual networks, all in the same region. ",
+  "summary": "Create a Virtual Networks Manager Hub-and-Spoke configuration for connectivity.",
+  "githubUsername": "laghimp",
+  "dateUpdated": "2021-11-10"
+}
+

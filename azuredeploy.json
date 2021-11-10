@@ -1,0 +1,183 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+"parameters": {
+  //location 
+  "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources"
+      }
+    },
+  //virtual networks
+  "virtualNetworks_vnetA_name": {
+      "defaultValue": "vnetA",
+      "type": "String" 
+  },
+  "virtualNetworks_vnetB_name": {
+      "defaultValue": "vnetB",
+      "type": "String"
+  },
+  "virtualNetworks_vnetHUB_name": {
+      "defaultValue": "vnetHUB",
+      "type": "String"
+  },
+  "vnetAddressPrefixA": {
+      "type": "string",
+      "defaultValue": "10.11.0.0/16",
+      "metadata": {
+        "description": "Address prefix for vnet A"
+      }
+  },
+  "vnetAddressPrefixB": {
+      "type": "string",
+      "defaultValue": "10.012.0.0/16",
+      "metadata": {
+        "description": "Address prefix for vnet B"
+      }
+  },
+  "vnetAddressPrefixHUB": {
+      "type": "string",
+      "defaultValue": "10.13.0.0/16",
+      "metadata": {
+        "description": "Address prefix for vnet HUB"
+      }
+  },
+  "subnetPrefixA": {
+      "type": "string",
+      "defaultValue": "10.11.0.0/24",
+      "metadata": {
+        "description": "Subnet prefix in vnet A"
+      }
+    },
+  "subnetNameA": {
+      "type": "string",
+      "defaultValue": "default",
+      "metadata": {
+        "description": "Subnet name in vnet A"
+      }
+  },   
+  "subnetPrefixB": {
+      "type": "string",
+      "defaultValue": "10.12.0.0/24",
+      "metadata": {
+        "description": "Subnet prefix in vnet B"
+      }
+    },
+  "subnetNameB": {
+      "type": "string",
+      "defaultValue": "default",
+      "metadata": {
+        "description": "Subnet name in vnet B"
+      }
+  },
+  "subnetPrefixHUB": {
+      "type": "string",
+      "defaultValue": "10.13.0.0/24",
+      "metadata": {
+        "description": "Subnet prefix in vnet HUB"
+      }
+  },
+  "subnetNameHUB": {
+      "type": "string",
+      "defaultValue": "default",
+      "metadata": {
+        "description": "Subnet name in vnet HUB"
+      }
+  }
+},
+
+"resources": [
+  {
+    "type": "Microsoft.Network/virtualNetworks",
+    "apiVersion": "2020-11-01",
+    "name": "[parameters('virtualNetworks_vnetA_name')]",
+    "location":"[parameters('location')]",
+    "tags": {
+      "env": "vnetmanagerdemo",
+      "group": "clientA"
+     },
+    "properties": {
+      "addressSpace": {
+        "addressPrefixes": [
+          "[parameters('vnetAddressPrefixA')]"
+        ]
+      },
+      "subnets": [
+        {
+          "name": "[parameters('subnetNameA')]",
+          "properties": {
+            "addressPrefix": "[parameters('subnetPrefixA')]",
+            "delegations": []
+          }
+        }
+      ],
+      "virtualNetworkPeerings": [],
+      "enableDdosProtection": false
+    }
+  },
+
+  {
+    "type": "Microsoft.Network/virtualNetworks",
+    "apiVersion": "2020-11-01",
+    "name": "[parameters('virtualNetworks_vnetB_name')]",
+    "location":"[parameters('location')]",
+    "tags": {
+      "env": "vnetmanagerdemo",
+      "group": "clientB"
+     },
+    "properties": {
+      "addressSpace": {
+        "addressPrefixes": [
+          "[parameters('vnetAddressPrefixB')]"
+        ]
+      },
+      "subnets": [
+        {
+          "name": "[parameters('subnetNameB')]",
+          "properties": {
+            "addressPrefix": "[parameters('subnetPrefixB')]",
+            "delegations": []
+          }
+        }
+      ],
+      "virtualNetworkPeerings": [],
+      "enableDdosProtection": false
+    }
+  },
+
+  {
+    "type": "Microsoft.Network/virtualNetworks",
+    "apiVersion": "2020-11-01",
+    "name": "[parameters('virtualNetworks_vnetHUB_name')]",
+    "location":"[parameters('location')]",
+    "tags": {
+      "env": "vnetmanagerdemo"
+     },
+    "properties": {
+      "addressSpace": {
+        "addressPrefixes": [
+          "[parameters('vnetAddressPrefixHUB')]"
+        ]
+      },
+      "subnets": [
+        {
+          "name": "[parameters('subnetNameHUB')]",
+          "properties": {
+            "addressPrefix": "[parameters('subnetPrefixHUB')]",
+            "delegations": []
+          }
+        }
+      ],
+      "virtualNetworkPeerings": [],
+      "enableDdosProtection": false
+    }
+  }
+
+
+
+],
+  "outputs": {
+  }
+}
