@@ -1,183 +1,393 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-"parameters": {
-  //location 
-  "location": {
+  "parameters": {
+    //location 
+    "location": {
       "type": "string",
       "defaultValue": "[resourceGroup().location]",
       "metadata": {
         "description": "Location for all resources"
       }
     },
-  //virtual networks
-  "virtualNetworks_vnetA_name": {
+    //virtual networks
+    "virtualNetworks_vnetA_name": {
       "defaultValue": "vnetA",
-      "type": "String" 
-  },
-  "virtualNetworks_vnetB_name": {
+      "type": "String"
+    },
+    "virtualNetworks_vnetB_name": {
       "defaultValue": "vnetB",
       "type": "String"
-  },
-  "virtualNetworks_vnetHUB_name": {
+    },
+    "virtualNetworks_vnetHUB_name": {
       "defaultValue": "vnetHUB",
       "type": "String"
-  },
-  "vnetAddressPrefixA": {
+    },
+    "vnetAddressPrefixA": {
       "type": "string",
       "defaultValue": "10.11.0.0/16",
       "metadata": {
         "description": "Address prefix for vnet A"
       }
-  },
-  "vnetAddressPrefixB": {
+    },
+    "vnetAddressPrefixB": {
       "type": "string",
       "defaultValue": "10.012.0.0/16",
       "metadata": {
         "description": "Address prefix for vnet B"
       }
-  },
-  "vnetAddressPrefixHUB": {
+    },
+    "vnetAddressPrefixHUB": {
       "type": "string",
       "defaultValue": "10.13.0.0/16",
       "metadata": {
         "description": "Address prefix for vnet HUB"
       }
-  },
-  "subnetPrefixA": {
+    },
+    "subnetPrefixA": {
       "type": "string",
       "defaultValue": "10.11.0.0/24",
       "metadata": {
         "description": "Subnet prefix in vnet A"
       }
     },
-  "subnetNameA": {
+    "subnetNameA": {
       "type": "string",
       "defaultValue": "default",
       "metadata": {
         "description": "Subnet name in vnet A"
       }
-  },   
-  "subnetPrefixB": {
+    },
+    "subnetPrefixB": {
       "type": "string",
       "defaultValue": "10.12.0.0/24",
       "metadata": {
         "description": "Subnet prefix in vnet B"
       }
     },
-  "subnetNameB": {
+    "subnetNameB": {
       "type": "string",
       "defaultValue": "default",
       "metadata": {
         "description": "Subnet name in vnet B"
       }
-  },
-  "subnetPrefixHUB": {
+    },
+    "subnetPrefixHUB": {
       "type": "string",
       "defaultValue": "10.13.0.0/24",
       "metadata": {
         "description": "Subnet prefix in vnet HUB"
       }
-  },
-  "subnetNameHUB": {
+    },
+    "subnetNameHUB": {
       "type": "string",
       "defaultValue": "default",
       "metadata": {
         "description": "Subnet name in vnet HUB"
       }
-  }
-},
+    },
 
-"resources": [
-  {
-    "type": "Microsoft.Network/virtualNetworks",
-    "apiVersion": "2020-11-01",
-    "name": "[parameters('virtualNetworks_vnetA_name')]",
-    "location":"[parameters('location')]",
-    "tags": {
-      "env": "vnetmanagerdemo",
-      "group": "clientA"
-     },
-    "properties": {
-      "addressSpace": {
-        "addressPrefixes": [
-          "[parameters('vnetAddressPrefixA')]"
-        ]
-      },
-      "subnets": [
-        {
-          "name": "[parameters('subnetNameA')]",
-          "properties": {
-            "addressPrefix": "[parameters('subnetPrefixA')]",
-            "delegations": []
-          }
-        }
+    //VMs
+    "vmAName": {
+      "type": "string",
+      "defaultValue": "vmA",
+      "metadata": {
+        "description": "The name of you Virtual Machine from vnetA."
+      }
+    },
+    "vmBName": {
+      "type": "string",
+      "defaultValue": "vmB",
+      "metadata": {
+        "description": "The name of you Virtual Machine from vnetB."
+      }
+    },
+    "vmHUBName": {
+      "type": "string",
+      "defaultValue": "vmHUB",
+      "metadata": {
+        "description": "The name of you Virtual Machine from vnetHUB."
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "admin",
+      "metadata": {
+        "description": "Username for the Virtual Machines."
+      }
+    },
+    "authenticationType": {
+      "type": "string",
+      "defaultValue": "password",
+      "allowedValues": [
+        "sshPublicKey",
+        "password"
       ],
-      "virtualNetworkPeerings": [],
-      "enableDdosProtection": false
+      "metadata": {
+        "description": "Type of authentication to use on the Virtual Machine. SSH key is recommended. Default is password."
+      }
+    },
+    "adminPasswordOrKey": {
+      "type": "secureString",
+      "metadata": {
+        "description": "SSH Key or password for the Virtual Machine. SSH key is recommended. Default is password."
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_B2s",
+      "metadata": {
+        "description": "The size of the VM"
+      }
+    },
+    "ubuntuOSVersion": {
+      "type": "string",
+      "defaultValue": "18.04-LTS",
+      "allowedValues": [
+        "12.04.5-LTS",
+        "14.04.5-LTS",
+        "16.04.0-LTS",
+        "18.04-LTS"
+      ],
+      "metadata": {
+        "description": "The Ubuntu version for the VM. This will pick a fully patched image of this given Ubuntu version."
+      }
+    },
+    "networkSecurityGroupName": {
+      "type": "string",
+      "defaultValue": "NSG",
+      "metadata": {
+        "description": "Name of the Network Security Group that will be applied to all Virtual Machines."
+      }
+    }
+
+  },
+  "variables": {
+    "publicIPAddressNameA": "[format('{0}PublicIP', parameters('vmAName'))]",
+    "networkInterfaceNameA": "[format('{0}NetInt', parameters('vmAName'))]",
+    "publicIPAddressNameB": "[format('{0}PublicIP', parameters('vmBName'))]",
+    "networkInterfaceNameB": "[format('{0}NetInt', parameters('vmBName'))]",
+    "publicIPAddressNameHUB": "[format('{0}PublicIP', parameters('vmHUBName'))]",
+    "networkInterfaceNameHUB": "[format('{0}NetInt', parameters('vmHUBName'))]",
+    "osDiskType": "Standard_LRS",
+    "linuxConfiguration": {
+      "disablePasswordAuthentication": true,
+      "ssh": {
+        "publicKeys": [
+          {
+            "path": "[format('/home/{0}/.ssh/authorized_keys', parameters('adminUsername'))]",
+            "keyData": "[parameters('adminPasswordOrKey')]"
+          }
+        ]
+      }
     }
   },
 
-  {
-    "type": "Microsoft.Network/virtualNetworks",
-    "apiVersion": "2020-11-01",
-    "name": "[parameters('virtualNetworks_vnetB_name')]",
-    "location":"[parameters('location')]",
-    "tags": {
-      "env": "vnetmanagerdemo",
-      "group": "clientB"
-     },
-    "properties": {
-      "addressSpace": {
-        "addressPrefixes": [
-          "[parameters('vnetAddressPrefixB')]"
-        ]
-      },
-      "subnets": [
-        {
-          "name": "[parameters('subnetNameB')]",
-          "properties": {
-            "addressPrefix": "[parameters('subnetPrefixB')]",
-            "delegations": []
+  "resources": [
+     {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2020-06-01",
+      "name": "[parameters('networkSecurityGroupName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "SSH",
+            "properties": {
+              "priority": 1000,
+              "protocol": "Tcp",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "22"
+            }
           }
-        }
-      ],
-      "virtualNetworkPeerings": [],
-      "enableDdosProtection": false
-    }
-  },
-
-  {
-    "type": "Microsoft.Network/virtualNetworks",
-    "apiVersion": "2020-11-01",
-    "name": "[parameters('virtualNetworks_vnetHUB_name')]",
-    "location":"[parameters('location')]",
-    "tags": {
-      "env": "vnetmanagerdemo"
-     },
-    "properties": {
-      "addressSpace": {
-        "addressPrefixes": [
-          "[parameters('vnetAddressPrefixHUB')]"
         ]
+      }
+    },
+
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2020-11-01",
+      "name": "[parameters('virtualNetworks_vnetA_name')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "env": "vnetmanagerdemo",
+        "group": "clientA"
       },
-      "subnets": [
-        {
-          "name": "[parameters('subnetNameHUB')]",
-          "properties": {
-            "addressPrefix": "[parameters('subnetPrefixHUB')]",
-            "delegations": []
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('vnetAddressPrefixA')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[parameters('subnetNameA')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetPrefixA')]",
+              "delegations": []
+            }
           }
+        ],
+        "virtualNetworkPeerings": [],
+        "enableDdosProtection": false
+      }
+    },
+
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2020-11-01",
+      "name": "[parameters('virtualNetworks_vnetB_name')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "env": "vnetmanagerdemo",
+        "group": "clientB"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('vnetAddressPrefixB')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[parameters('subnetNameB')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetPrefixB')]",
+              "delegations": []
+            }
+          }
+        ],
+        "virtualNetworkPeerings": [],
+        "enableDdosProtection": false
+      }
+    },
+
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2020-11-01",
+      "name": "[parameters('virtualNetworks_vnetHUB_name')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "env": "vnetmanagerdemo"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('vnetAddressPrefixHUB')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[parameters('subnetNameHUB')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetPrefixHUB')]",
+              "delegations": []
+            }
+          }
+        ],
+        "virtualNetworkPeerings": [],
+        "enableDdosProtection": false
+      }
+    },
+
+    
+
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('networkInterfaceNameA')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnetA_name'), parameters('subnetNameA'))]"
+              },
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressNameA'))]"
+              }
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"
         }
-      ],
-      "virtualNetworkPeerings": [],
-      "enableDdosProtection": false
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressNameA'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnetA_name'), parameters('subnetNameA'))]"
+      ]
+    },
+   
+
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('publicIPAddressNameA')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "publicIPAddressVersion": "IPv4",
+        "idleTimeoutInMinutes": 4
+      }
+    },
+
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2020-06-01",
+      "name": "[parameters('vmAName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "storageProfile": {
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "[variables('osDiskType')]"
+            }
+          },
+          "imageReference": {
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "[parameters('ubuntuOSVersion')]",
+            "version": "latest"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceNameA'))]"
+            }
+          ]
+        },
+        "osProfile": {
+          "computerName": "[parameters('vmAName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPasswordOrKey')]",
+          "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), null(), variables('linuxConfiguration'))]"
+        }
+      }, 
+       "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceNameA'))]"
+      ]
     }
-  }
 
 
 
-],
-  "outputs": {
-  }
+  ],
+
+  "outputs": {}
 }

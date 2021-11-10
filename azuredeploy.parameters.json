@@ -2,44 +2,12 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-      "location": {
-          "value": "westus" 
+    
+      "adminUsername": {
+        "value": "GEN-UNIQUE"
       },
-      "virtualNetworks_vnetA_name": {
-          "value": "vnetA"
-      },
-      "virtualNetworks_vnetB_name": {
-          "value": "vnetB"
-      },
-      "virtualNetworks_vnetHUB_name": {
-          "value": "vnetHUB"
-      },
-      "vnetAddressPrefixA": {
-          "value": "10.11.0.0/16"
-      },
-      "vnetAddressPrefixB": {
-          "value": "10.012.0.0/16"
-      },
-      "vnetAddressPrefixHUB": {
-          "value": "10.13.0.0/16"
-      },
-      "subnetPrefixA": {
-          "value": "10.11.0.0/24"
-      },
-      "subnetNameA": {
-          "value": "default"
-      },
-      "subnetPrefixB": {
-          "value": "10.12.0.0/24"
-      },
-      "subnetNameB": {
-          "value": "default"
-      },
-      "subnetPrefixHUB": {
-          "value": "10.13.0.0/24"
-      },
-      "subnetNameHUB": {
-          "value": "default"
+      "adminPasswordOrKey": {
+        "value": "GEN-PASSWORD"
       }
     }
 }
